@@ -65,7 +65,7 @@ internal class RemoteCatalogue(private val store: StoreApi, private val enquirie
         )
 }
 
-internal fun createCatalogue(client: OkHttpClient = OkHttpClient()): Catalogue {
+internal fun createCatalogue(client: OkHttpClient = catalogueHttpClient()): Catalogue {
     val retrofit = Retrofit.Builder()
         .baseUrl("$catalogueOrigin/")
         .client(client)
