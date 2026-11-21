@@ -13,7 +13,7 @@ Codex (GPT-6.2 Astra) worked from the acceptance criteria and the [repository gu
 
 Five backend tests and seven JVM tests passed in the final code revision. The HTTP tests intercepted outgoing requests to verify the backend URL, product mapping, enquiry fields and handling of a rejected enquiry. The domain tests covered search, category ranking and ties. Production sources, debug previews and instrumented test sources compiled against cached Android libraries.
 
-The runner blocked Gradle and adb socket access. APK packaging, emulator interaction, live Fake Store access and inbox delivery were unverified. The [README](README.md) includes the emulator commands and a manual inbox check.
+The runner blocked Gradle and adb socket access. APK packaging, emulator interaction, live Fake Store access and inbox delivery were unverified. The mail tests use an injected sender. Verifying Gmail delivery requires a configured sender account and a submission checked in the sales mailbox. The [README](README.md) covers both steps.
 
 ## Time spent
 

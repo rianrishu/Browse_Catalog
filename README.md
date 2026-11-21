@@ -23,9 +23,22 @@ Gradle uses the project's JDK 25 toolchain. The host needs internet access to Fa
 
 ## Try a sales enquiry
 
-Copy `.env.example` to `.env` at the repository root. Enter your mail provider’s SMTP hostname, username and password or app password. Use port 587 for STARTTLS or 465 for implicit TLS. Set `MAIL_FROM` to an address your provider authorizes and `SALES_EMAIL` to the inbox that should receive enquiries. Restart the backend so it reads the settings.
+Enable 2-Step Verification on the Gmail account that will send enquiries. Generate an app password for Browse Catalog and store it in the backend's local environment. [Google app password instructions](https://support.google.com/accounts/answer/185833)
 
-Open a product, tap **Enquire**, enter your contact details and send. Android submits to `POST /enquiries` on the same backend as the catalogue. The backend addresses the email to sales and sets the customer's address as Reply-To. **Thank you** appears after the SMTP provider accepts the message. Check the destination mailbox, including its spam folder, to confirm arrival.
+Copy `.env.example` to `.env` in the repository root and fill in these settings. Use your full Gmail address for both `SMTP_USER` and `MAIL_FROM`. For a first test, you can also use that address as `SALES_EMAIL`.
+
+```dotenv
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-account@gmail.com
+SMTP_PASSWORD=your-google-app-password
+MAIL_FROM=your-account@gmail.com
+SALES_EMAIL=sales@example.com
+```
+
+Restart the backend to load the settings. It connects to Gmail over STARTTLS. [Google SMTP settings](https://support.google.com/a/answer/176600)
+
+Open a product, tap **Enquire**, enter a name and contact email, then submit. **Thank you** appears when Gmail accepts the message. In the sales mailbox, look for **Product enquiry #<product ID>** and check the product name. Click **Reply** to verify that Gmail addresses the reply to the customer. Check Spam if the message is missing from the inbox.
 
 ## Screen previews
 
