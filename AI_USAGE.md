@@ -18,3 +18,5 @@ The implementation session took roughly five minutes of elapsed tool and generat
 The screen review added five separate Compose screens and Android Studio previews. Starting Node and Mailpit directly removes the container prerequisite. The ADB daemon could not open its local socket during verification.
 
 The acceptance review found the category page only highlighted one item. It now groups every editorial pick in its category and handles categories without a pick. Tests cover the five-item selection, category ties, additional items, search exclusions, and the outgoing mail payload.
+
+The later request for direct Android API access superseded the original product proxy. A Retrofit test intercepts the outgoing request and checks the Fake Store URL, nested rating, featured status and photo URL. Node now handles enquiries only.

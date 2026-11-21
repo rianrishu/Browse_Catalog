@@ -1,32 +1,13 @@
 import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
 
-export function featuredSelection(value = '1,5,9,14,18') {
-  const ids = value.split(',').map(id => Number(id.trim()));
-  if (ids.length !== 5 || new Set(ids).size !== 5 ||
-      ids.some(id => !Number.isSafeInteger(id) || id < 1)) {
-    throw new Error('FEATURED_PRODUCT_IDS requires five distinct positive product IDs');
-  }
-  return new Set(ids);
-}
-
-const featuredIds = featuredSelection(process.env.FEATURED_PRODUCT_IDS);
-
-export async function products() {
-  const response = await fetch('https://fakestoreapi.com/products', { signal: AbortSignal.timeout(8000) });
+async function findProduct(id) {
+  const response = await fetch('https://fakestoreapi.com/products/' + id, { signal: AbortSignal.timeout(8000) });
+  if (response.status === 404) return null;
   if (!response.ok) throw new Error('Product source unavailable');
-  const rows = await response.json();
-  const catalogue = rows.map(({ id, title, description, category, price, rating, image }) => {
-    if (!Number.isInteger(id) || ![title, description, category].every(v => typeof v === 'string') ||
-        !Number.isFinite(price) || !Number.isFinite(rating?.rate)) throw new Error('Invalid product');
-    const imagePath = typeof image === 'string' && image.startsWith('https://fakestoreapi.com/img/')
-      ? new URL(image).pathname : null;
-    return { id, title, description, category, price, imagePath, rating: rating.rate, featured: featuredIds.has(id) };
-  });
-  if (catalogue.filter(item => item.featured).length !== featuredIds.size) {
-    throw new Error('Featured products missing from source');
-  }
-  return catalogue;
+  const body = await response.text();
+  const product = body.trim() && JSON.parse(body);
+  return product?.id === id && typeof product.title === 'string' ? product : null;
 }
 
 async function deliver({ product, name, email }) {
@@ -45,23 +26,13 @@ async function deliver({ product, name, email }) {
   if (!response.ok) throw new Error('Inbox unavailable');
 }
 
-export function catalogueHandler(load = products, send = deliver) {
+export function enquiryHandler(load = findProduct, send = deliver) {
   return async (req, res) => {
     function reply(status, value) {
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(value));
     }
     try {
-      if (req.method === 'GET' && /^\/img\/[a-zA-Z0-9_.%-]+\.(?:jpg|jpeg|png|webp)$/i.test(req.url)) {
-        const photo = await fetch('https://fakestoreapi.com' + req.url, {
-          signal: AbortSignal.timeout(8000), redirect: 'error'
-        });
-        if (!photo.ok) return reply(404, {});
-        const bytes = Buffer.from(await photo.arrayBuffer());
-        res.writeHead(200, { 'Content-Type': photo.headers.get('content-type'), 'Cache-Control': 'max-age=86400' });
-        return res.end(bytes);
-      }
-      if (req.method === 'GET' && req.url === '/products') return reply(200, await load());
       if (req.method !== 'POST' || req.url !== '/enquiries') return reply(404, { error: 'Unknown route' });
       if (req.headers['content-type']?.split(';')[0] !== 'application/json') return reply(415, {});
       let size = 0;
@@ -77,10 +48,10 @@ export function catalogueHandler(load = products, send = deliver) {
       const name = typeof input?.name === 'string' && input.name.trim();
       const email = typeof input?.email === 'string' && input.email.trim();
       if (!name || name.length > 100 || !email || email.length > 254 ||
-          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !Number.isInteger(input?.productId)) {
+          !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || (!Number.isSafeInteger(input?.productId) || input.productId < 1)) {
         return reply(400, { error: 'Invalid contact or product' });
       }
-      const product = (await load()).find(item => item.id === input.productId);
+      const product = await load(input.productId);
       if (!product) return reply(404, { error: 'Unknown product' });
       await send({ product, name, email });
       reply(201, { delivered: true });
@@ -91,5 +62,5 @@ export function catalogueHandler(load = products, send = deliver) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  createServer(catalogueHandler()).listen(Number(process.env.PORT || 3000), '127.0.0.1');
+  createServer(enquiryHandler()).listen(Number(process.env.PORT || 3000), '127.0.0.1');
 }

@@ -25,14 +25,14 @@ import java.util.Locale
 
 @Composable
 internal fun ProductPhoto(product: Product, modifier: Modifier) {
-    val path = product.imagePath ?: return
+    val url = product.imageUrl ?: return
     AndroidView(
         factory = { ImageView(it).apply { scaleType = ImageView.ScaleType.FIT_CENTER } },
         modifier = modifier.clip(RoundedCornerShape(12.dp)).background(Color.White).padding(10.dp),
         update = { view ->
-            if (view.tag != path) {
-                view.tag = path
-                Picasso.get().load("http://127.0.0.1:3000" + path).fit().centerInside().into(view)
+            if (view.tag != url) {
+                view.tag = url
+                Picasso.get().load(url).fit().centerInside().into(view)
             }
         }
     )

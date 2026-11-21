@@ -8,7 +8,7 @@ data class Product(
     val price: Double,
     val rating: Double,
     val featured: Boolean,
-    val imagePath: String? = null
+    val imageUrl: String? = null
 )
 
 interface Catalogue {
