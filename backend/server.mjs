@@ -1,19 +1,32 @@
 import { createServer } from 'node:http';
 import { pathToFileURL } from 'node:url';
 
-const featuredIds = [1, 5, 9, 14, 18];
+export function featuredSelection(value = '1,5,9,14,18') {
+  const ids = value.split(',').map(id => Number(id.trim()));
+  if (ids.length !== 5 || new Set(ids).size !== 5 ||
+      ids.some(id => !Number.isSafeInteger(id) || id < 1)) {
+    throw new Error('FEATURED_PRODUCT_IDS requires five distinct positive product IDs');
+  }
+  return new Set(ids);
+}
+
+const featuredIds = featuredSelection(process.env.FEATURED_PRODUCT_IDS);
 
 export async function products() {
   const response = await fetch('https://fakestoreapi.com/products', { signal: AbortSignal.timeout(8000) });
   if (!response.ok) throw new Error('Product source unavailable');
   const rows = await response.json();
-  return rows.map(({ id, title, description, category, price, rating, image }) => {
+  const catalogue = rows.map(({ id, title, description, category, price, rating, image }) => {
     if (!Number.isInteger(id) || ![title, description, category].every(v => typeof v === 'string') ||
         !Number.isFinite(price) || !Number.isFinite(rating?.rate)) throw new Error('Invalid product');
     const imagePath = typeof image === 'string' && image.startsWith('https://fakestoreapi.com/img/')
       ? new URL(image).pathname : null;
-    return { id, title, description, category, price, imagePath, rating: rating.rate, featured: featuredIds.includes(id) };
+    return { id, title, description, category, price, imagePath, rating: rating.rate, featured: featuredIds.has(id) };
   });
+  if (catalogue.filter(item => item.featured).length !== featuredIds.size) {
+    throw new Error('Featured products missing from source');
+  }
+  return catalogue;
 }
 
 async function deliver({ product, name, email }) {
@@ -77,6 +90,6 @@ export function catalogueHandler(load = products, send = deliver) {
   };
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   createServer(catalogueHandler()).listen(Number(process.env.PORT || 3000), '127.0.0.1');
 }

@@ -11,8 +11,10 @@ Codex (GPT-6.2 Astra) implemented this change with the repository's [contributor
 
 ## Verification and time
 
-Four Node tests and two JVM domain tests passed. The production Kotlin sources also compiled with the local Compose compiler and cached Android libraries. Gradle could not acquire a socket in the runner. APK packaging, the instrumented journey and live Mailpit delivery still need an emulator run. Run the journey with `./gradlew :app:connectedDebugAndroidTest` after starting an emulator.
+Six Node tests and four JVM domain tests passed. The production Kotlin sources also compiled with the local Compose compiler and cached Android libraries. Gradle could not acquire a socket in the runner. APK packaging, the instrumented journey and live Mailpit delivery still need an emulator run. Run the journey with `./gradlew :app:connectedDebugAndroidTest` after starting an emulator.
 
 The implementation session took roughly five minutes of elapsed tool and generation time: under a minute to read and plan, about two minutes building, and about two minutes testing and reviewing. This excludes the earlier repository setup and any later human review.
 
 The screen review added five separate Compose screens and Android Studio previews. Starting Node and Mailpit directly removes the container prerequisite. The ADB daemon could not open its local socket during verification.
+
+The acceptance review found the category page only highlighted one item. It now groups every editorial pick in its category and handles categories without a pick. Tests cover the five-item selection, category ties, additional items, search exclusions, and the outgoing mail payload.

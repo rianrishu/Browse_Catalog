@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { Readable } from 'node:stream';
-import { catalogueHandler, products } from './server.mjs';
+import { catalogueHandler, products, featuredSelection } from './server.mjs';
 
 test('catalogue and enquiry delivery', async () => {
   const product = { id: 1, title: 'Bag' };
@@ -30,7 +30,10 @@ test('the store adapter exposes five editor picks', async t => {
   const rows = Array.from({ length: 20 }, (_, index) => ({
     id: index + 1, title: 'Bag', description: 'Canvas', category: 'Bags', price: 5, rating: { rate: 4 }
   }));
-  t.mock.method(globalThis, 'fetch', async () => Response.json(rows));
+  t.mock.method(globalThis, 'fetch', async url => {
+    assert.equal(url, 'https://fakestoreapi.com/products');
+    return Response.json(rows);
+  });
   const catalogue = await products();
   assert.deepEqual(catalogue.filter(row => row.featured).map(row => row.id), [1, 5, 9, 14, 18]);
   assert.equal(catalogue[0].rating, 4);
@@ -58,4 +61,32 @@ test('product photos come through the catalogue backend', async t => {
   assert.equal(res.status, 200);
   assert.equal(res.headers['Content-Type'], 'image/jpeg');
   assert.equal(res.bytes.toString(), 'photo');
+});
+
+test('editorial selection requires five different IDs', () => {
+  assert.deepEqual([...featuredSelection('3, 2, 8, 12, 4')], [3, 2, 8, 12, 4]);
+  for (const invalid of ['1,2,3,4', '1,2,3,4,4', '1,2,3,4,-1', '1,2,3,4,no']) {
+    assert.throws(() => featuredSelection(invalid));
+  }
+});
+
+test('a submitted enquiry sends the selected product and customer reply address to sales', async t => {
+  const product = { id: 12, title: 'Wool scarf' };
+  let message;
+  t.mock.method(globalThis, 'fetch', async (url, options) => {
+    assert.equal(new URL(url).pathname, '/api/v1/send');
+    assert.equal(options.method, 'POST');
+    message = JSON.parse(options.body);
+    return Response.json({ ID: 'accepted' });
+  });
+  const req = Readable.from([Buffer.from(JSON.stringify({ productId: 12, name: ' Sam ', email: ' sam@example.test ' }))]);
+  Object.assign(req, { method: 'POST', url: '/enquiries', headers: { 'content-type': 'application/json' } });
+  const res = { writeHead(status) { this.status = status; }, end(body) { this.json = JSON.parse(body); } };
+  await catalogueHandler(async () => [product])(req, res);
+  assert.equal(res.status, 201);
+  assert.deepEqual(res.json, { delivered: true });
+  assert.deepEqual(message.To, [{ Email: process.env.SALES_EMAIL || 'sales@example.test' }]);
+  assert.deepEqual(message.ReplyTo, [{ Email: 'sam@example.test' }]);
+  assert.match(message.Subject, /#12/);
+  assert.match(message.Text, /Sam is interested in Wool scarf/);
 });

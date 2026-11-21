@@ -32,8 +32,8 @@ Run `node --test backend/server.test.mjs` with Node 22.9+ for catalogue mapping,
 
 ## Decisions
 
-- Home features five editorial picks, identified by stable product IDs in the backend. Each category highlights its highest-rated product and lists the rest in rating order. Ties use product ID.
-- Search runs on submit across titles and descriptions, ignoring case. Prices use USD. The small catalogue fits in memory. Search scans it once. Sorting a category of k products costs O(k log k).
+- Set `FEATURED_PRODUCT_IDS` in `.env` to choose five distinct IDs from the backend catalogue, then restart Node. Home shows those five products. A category highlights all its editorial picks and lists its remaining products separately. A category without a pick highlights the highest customer rating, including ties. Products within each section are ordered by rating, then ID.
+- Search runs on submit across titles, descriptions and category names, ignoring case. Prices use USD. The small catalogue fits in memory. Search scans it once. Sorting a category of k products costs O(k log k).
 - The ViewModel depends on the Catalogue interface. A factory supplies the Retrofit repository, and Compose collects state with the screen lifecycle. Product selection and draft form fields survive rotation. Manual injection keeps the object graph small and lets tests substitute a repository. [Android architecture](https://developer.android.com/topic/architecture/recommendations) · [Dependency injection](https://developer.android.com/training/dependency-injection/manual)
 - The backend owns the product source, recipient and mail adapter. A successful enquiry means Mailpit accepted the message. Local delivery gives reviewers a real inbox without credentials. The debug build allows HTTP to loopback.
 - With another day, add durable enquiry IDs and deduplicated delivery before connecting a production mail provider. A lost acknowledgement can currently lead to a second email on retry. Production would also need HTTPS and request throttling.

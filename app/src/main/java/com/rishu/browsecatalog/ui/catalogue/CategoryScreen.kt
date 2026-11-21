@@ -14,13 +14,13 @@ internal fun CategoryScreen(products: List<Product>, category: String, open: (In
     val ranked = remember(products, category) { products.inCategory(category) }
     LazyColumn(contentPadding = PaddingValues(vertical = 12.dp)) {
         item { Text(category.replaceFirstChar { it.titlecase() }, style = MaterialTheme.typography.headlineLarge) }
-        ranked.firstOrNull()?.let { top ->
+        if (ranked.topRated.isNotEmpty()) {
             item { Text("Top rated", Modifier.padding(top = 24.dp), style = MaterialTheme.typography.titleLarge) }
-            item { ProductRow(top, open) }
+            items(ranked.topRated, key = { it.id }) { ProductRow(it, open) }
         }
-        if (ranked.size > 1) item {
+        if (ranked.additional.isNotEmpty()) item {
             Text("More in this category", Modifier.padding(top = 24.dp), style = MaterialTheme.typography.titleLarge)
         }
-        items(ranked.drop(1), key = { it.id }) { ProductRow(it, open) }
+        items(ranked.additional, key = { it.id }) { ProductRow(it, open) }
     }
 }
