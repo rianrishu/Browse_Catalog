@@ -37,6 +37,11 @@ android {
 }
 
 dependencies {
+    implementation(libs.retrofit)
+    implementation(libs.gson.converter)
+    implementation(libs.okhttp)
+    implementation(libs.lifecycle.compose)
+    implementation(libs.activity.ktx)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
