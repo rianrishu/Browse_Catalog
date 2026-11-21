@@ -31,7 +31,7 @@ class CatalogueApiTest {
         assertEquals(true, product.featured)
     }
 
-    @Test fun enquiryPostsTheProductAndReplyAddressToTheLocalInbox() = runBlocking {
+    @Test fun enquiryPostsContactDetailsToTheBackend() = runBlocking {
         var url = ""
         var json = ""
         val client = OkHttpClient.Builder().addInterceptor { chain ->
@@ -44,12 +44,13 @@ class CatalogueApiTest {
         val bag = Product(12, "Wool bag", "Bags", "Canvas", 19.0, 4.0, false)
         createCatalogue(client).enquire(bag, " Sam ", " sam@example.test ")
 
-        assertEquals("http://127.0.0.1:8025/api/v1/send", url)
+        assertEquals("http://127.0.0.1:3000/enquiries", url)
         val message = JsonParser.parseString(json).asJsonObject
-        assertEquals("sales@example.test", message["To"].asJsonArray.single().asJsonObject["Email"].asString)
-        assertEquals("sam@example.test", message["ReplyTo"].asJsonArray.single().asJsonObject["Email"].asString)
-        assertEquals("Product enquiry #12", message["Subject"].asString)
-        assertEquals("Sam is interested in Wool bag. Contact: sam@example.test", message["Text"].asString)
+        assertEquals(setOf("productId", "title", "email", "name"), message.keySet())
+        assertEquals(12, message["productId"].asInt)
+        assertEquals("Wool bag", message["title"].asString)
+        assertEquals("Sam", message["name"].asString)
+        assertEquals("sam@example.test", message["email"].asString)
     }
 
     @Test(expected = HttpException::class)

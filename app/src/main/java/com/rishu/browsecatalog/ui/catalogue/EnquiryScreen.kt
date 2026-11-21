@@ -24,7 +24,7 @@ internal fun EnquiryScreen(product: Product, delivery: Delivery, submit: (Produc
         contentPadding = PaddingValues(vertical = 12.dp)) {
         if (delivery == Delivery.Sent) {
             item { Text("Thank you", style = MaterialTheme.typography.headlineLarge) }
-            item { Text("Your enquiry about ${product.title} reached the sales inbox. Replies will go to $email.") }
+            item { Text("Your enquiry about ${product.title} was sent to sales. Replies will go to $email.") }
             item { Button(onClick = done) { Text("Continue browsing") } }
         } else {
             item { Text("Product enquiry", style = MaterialTheme.typography.headlineLarge) }
