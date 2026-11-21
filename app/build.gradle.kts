@@ -37,6 +37,12 @@ android {
 }
 
 dependencies {
+    implementation(libs.picasso)
+    implementation(libs.retrofit)
+    implementation(libs.gson.converter)
+    implementation(libs.okhttp)
+    implementation(libs.lifecycle.compose)
+    implementation(libs.activity.ktx)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
@@ -50,6 +56,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+    debugImplementation(libs.http.logging)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
