@@ -1,0 +1,22 @@
+*.iml
+.idea/
+.gradle/
+.kotlin/
+build/
+/captures
+.externalNativeBuild/
+.cxx/
+.DS_Store
+
+# Local configuration and signing credentials
+local.properties
+.env
+.env.*
+!.env.example
+keystore.properties
+*.jks
+*.keystore
+
+# Packaged Android builds
+*.apk
+*.aab
