@@ -53,8 +53,8 @@ class CatalogueJourneyTest {
         val catalogue = object : Catalogue {
             override suspend fun products() = listOf(product)
 
-            override suspend fun enquire(productId: Int, name: String, email: String) {
-                assertEquals(product.id, productId)
+            override suspend fun enquire(product: Product, name: String, email: String) {
+                assertEquals(1, product.id)
                 assertEquals("Sam", name)
                 recipient = email
             }

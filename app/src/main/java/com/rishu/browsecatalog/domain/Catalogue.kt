@@ -13,7 +13,7 @@ data class Product(
 
 interface Catalogue {
     suspend fun products(): List<Product>
-    suspend fun enquire(productId: Int, name: String, email: String)
+    suspend fun enquire(product: Product, name: String, email: String)
 }
 
 fun List<Product>.matching(term: String) = filter {

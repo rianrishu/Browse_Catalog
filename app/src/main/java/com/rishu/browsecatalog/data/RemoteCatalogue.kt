@@ -1,6 +1,7 @@
 package com.rishu.browsecatalog.data
 
 import androidx.annotation.Keep
+import com.google.gson.annotations.SerializedName
 import com.rishu.browsecatalog.domain.Catalogue
 import com.rishu.browsecatalog.domain.Product
 import okhttp3.OkHttpClient
@@ -11,7 +12,16 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 
 @Keep
-internal data class Contact(val productId: Int, val name: String, val email: String)
+internal data class MailAddress(@SerializedName("Email") val email: String)
+
+@Keep
+internal data class EnquiryMessage(
+    @SerializedName("From") val from: MailAddress,
+    @SerializedName("To") val to: List<MailAddress>,
+    @SerializedName("ReplyTo") val replyTo: List<MailAddress>,
+    @SerializedName("Subject") val subject: String,
+    @SerializedName("Text") val text: String
+)
 
 @Keep
 internal data class StoreRating(val rate: Double)
@@ -33,8 +43,8 @@ internal interface StoreApi {
 }
 
 internal interface EnquiryApi {
-    @POST("enquiries")
-    suspend fun enquire(@Body contact: Contact)
+    @POST("api/v1/send")
+    suspend fun enquire(@Body message: EnquiryMessage)
 }
 
 private val featuredIds = setOf(1, 5, 9, 14, 18)
@@ -45,8 +55,16 @@ internal class RemoteCatalogue(private val store: StoreApi, private val enquirie
             item.id in featuredIds, item.image?.takeIf { it.startsWith("https://") })
     }
 
-    override suspend fun enquire(productId: Int, name: String, email: String) =
-        enquiries.enquire(Contact(productId, name.trim(), email.trim()))
+    override suspend fun enquire(product: Product, name: String, email: String) =
+        enquiries.enquire(
+            EnquiryMessage(
+                from = MailAddress("catalogue@example.test"),
+                to = listOf(MailAddress("sales@example.test")),
+                replyTo = listOf(MailAddress(email.trim())),
+                subject = "Product enquiry #${product.id}",
+                text = "${name.trim()} is interested in ${product.title}. Contact: ${email.trim()}"
+            )
+        )
 }
 
 internal fun createCatalogue(client: OkHttpClient = OkHttpClient()): Catalogue {
@@ -55,6 +73,6 @@ internal fun createCatalogue(client: OkHttpClient = OkHttpClient()): Catalogue {
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()
-    val enquiries = retrofit.newBuilder().baseUrl("http://127.0.0.1:3000/").build()
+    val enquiries = retrofit.newBuilder().baseUrl("http://127.0.0.1:8025/").build()
     return RemoteCatalogue(retrofit.create(StoreApi::class.java), enquiries.create(EnquiryApi::class.java))
 }

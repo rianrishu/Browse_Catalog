@@ -39,12 +39,12 @@ class CatalogueViewModel(private val catalogue: Catalogue) : ViewModel() {
 
     fun resetEnquiry() = mutableState.update { it.copy(delivery = Delivery.Idle) }
 
-    fun enquire(id: Int, name: String, email: String) {
+    fun enquire(product: Product, name: String, email: String) {
         if (state.value.delivery == Delivery.Sending || state.value.delivery == Delivery.Sent) return
         mutableState.update { it.copy(delivery = Delivery.Sending) }
         viewModelScope.launch {
             val result = try {
-                catalogue.enquire(id, name, email)
+                catalogue.enquire(product, name, email)
                 Delivery.Sent
             } catch (cancelled: CancellationException) {
                 throw cancelled

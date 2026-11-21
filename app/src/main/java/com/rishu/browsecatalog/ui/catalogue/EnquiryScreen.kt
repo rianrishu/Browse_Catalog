@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import com.rishu.browsecatalog.domain.Product
 
 @Composable
-internal fun EnquiryScreen(product: Product, delivery: Delivery, submit: (Int, String, String) -> Unit,
+internal fun EnquiryScreen(product: Product, delivery: Delivery, submit: (Product, String, String) -> Unit,
     done: () -> Unit) {
     var name by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
@@ -40,7 +40,7 @@ internal fun EnquiryScreen(product: Product, delivery: Delivery, submit: (Int, S
             if (delivery == Delivery.Failed) item { Text("Couldn’t confirm delivery. Please try again.") }
             item { Button(onClick = {
                 attempted = true
-                if (name.isNotBlank() && validEmail) submit(product.id, name, email)
+                if (name.isNotBlank() && validEmail) submit(product, name, email)
             }, enabled = !sending, modifier = Modifier.fillMaxWidth()) { Text(if (sending) "Sending…" else "Send enquiry") } }
         }
     }
