@@ -1,24 +1,20 @@
 # AI usage
 
-Codex (GPT-6.2 Astra) implemented this change with the repository's [contributor instructions](AGENTS.md). The plan had three parts: establish the backend contract, build the Android browsing and enquiry flow, then test the boundaries and document the local setup.
+Codex (GPT-6.2 Astra) worked from the acceptance criteria and the [repository guidelines](AGENTS.md). The initial plan covered the data sources, the Android browsing and enquiry flows, then verification and reviewer setup.
 
-## Decisions shaped by the brief
+## Decisions during development
 
-1. The request for Retrofit and OkHttp initially left the destination open. Reading the acceptance criteria settled the boundary: the phone talks to our service, which owns the third-party catalogue and sales inbox.
-2. The nearby Hilt MVVM movie project separates network setup, repositories and presentation. This project follows that dependency direction. One repository and one ViewModel need only a constructor and a lifecycle factory.
-3. The original emulator setup used the host's virtual LAN address. Reviewing Android 17 network permissions exposed an unnecessary permission dependency. The final setup forwards a loopback port with adb.
-4. The first backend test opened a listening socket. The restricted runner rejected it before reaching any assertions. The revised tests pass request streams directly to the HTTP handler. They exercise routing and validation while leaving real network delivery for the emulator smoke test.
+1. The request to follow nearby Android projects led to a Compose UI, a ViewModel and an injected catalogue repository. The nearby Hilt movie project informed the package boundaries. A single constructor and lifecycle factory supply this app’s dependencies.
+2. Reviewing the first implementation exposed two gaps. The five shopping flows shared one large composable, and categories displayed only one editorial pick. Each flow now has a screen and preview. Each category lists all its featured picks before its remaining products.
+3. The original brief required a backend for product data. The later request for direct Android networking changed that decision. Retrofit now fetches products from Fake Store, and the app loads photos from the HTTPS URLs in the response.
+4. The request to send enquiries directly removed the Node service. Android posts the selected product and customer reply address to Mailpit over a port forwarded by adb. The ViewModel shows a confirmation after Mailpit accepts the request and offers a retry after failure.
 
-## Verification and time
+## Verification
 
-Six Node tests and four JVM domain tests passed. The production Kotlin sources also compiled with the local Compose compiler and cached Android libraries. Gradle could not acquire a socket in the runner. APK packaging, the instrumented journey and live Mailpit delivery still need an emulator run. Run the journey with `./gradlew :app:connectedDebugAndroidTest` after starting an emulator.
+Seven JVM tests passed in the final code revision. The HTTP tests intercepted outgoing requests to verify the Fake Store URL, product mapping, Mailpit message fields and handling of a rejected enquiry. The domain tests covered search, category ranking and ties. Production sources, debug previews and instrumented test sources compiled against cached Android libraries.
 
-The implementation session took roughly five minutes of elapsed tool and generation time: under a minute to read and plan, about two minutes building, and about two minutes testing and reviewing. This excludes the earlier repository setup and any later human review.
+The runner blocked Gradle and adb socket access. APK packaging, emulator interaction, live Fake Store access and inbox delivery were unverified. The [README](README.md) includes the emulator commands and a manual inbox check.
 
-The screen review added five separate Compose screens and Android Studio previews. Starting Node and Mailpit directly removes the container prerequisite. The ADB daemon could not open its local socket during verification.
+## Time spent
 
-The acceptance review found the category page only highlighted one item. It now groups every editorial pick in its category and handles categories without a pick. Tests cover the five-item selection, category ties, additional items, search exclusions, and the outgoing mail payload.
-
-The later request for direct Android API access superseded the original product proxy. A Retrofit test intercepts the outgoing request and checks the Fake Store URL, nested rating, featured status and photo URL. Node now handles enquiries only.
-
-The final Android-only revision moved enquiry submission to the Mailpit HTTP API and removed the Node service. The local inbox remains a separate process for receiving and inspecting messages.
+The initial implementation pass took about five minutes of elapsed tool and generation time. Planning took under a minute, building took about two minutes, and testing and review took about two minutes. Later screen and networking revisions were not timed, so a total for the full project is unavailable.
