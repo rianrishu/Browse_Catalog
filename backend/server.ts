@@ -1,0 +1,18 @@
+import { createServer } from 'node:http';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import { catalogue } from './catalogue.ts';
+
+createServer(async (request, response) => {
+  const result = await catalogue(request.method ?? '', request.url ?? '');
+  response.writeHead(result.status, Object.fromEntries(result.headers));
+  if (!result.body) {
+    response.end();
+    return;
+  }
+  try {
+    await pipeline(Readable.from(result.body), response);
+  } catch {
+    response.destroy();
+  }
+}).listen(3000, '127.0.0.1');

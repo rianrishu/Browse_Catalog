@@ -24,17 +24,15 @@ internal data class EnquiryMessage(
 )
 
 @Keep
-internal data class StoreRating(val rate: Double)
-
-@Keep
 internal data class StoreProduct(
     val id: Int,
     val title: String,
     val category: String,
     val description: String,
     val price: Double,
-    val rating: StoreRating,
-    val image: String?
+    val rating: Double,
+    val featured: Boolean,
+    val imagePath: String?
 )
 
 internal interface StoreApi {
@@ -47,12 +45,12 @@ internal interface EnquiryApi {
     suspend fun enquire(@Body message: EnquiryMessage)
 }
 
-private val featuredIds = setOf(1, 5, 9, 14, 18)
+private const val catalogueOrigin = "http://127.0.0.1:3000"
 
 internal class RemoteCatalogue(private val store: StoreApi, private val enquiries: EnquiryApi) : Catalogue {
     override suspend fun products() = store.products().map { item ->
-        Product(item.id, item.title, item.category, item.description, item.price, item.rating.rate,
-            item.id in featuredIds, item.image?.takeIf { it.startsWith("https://") })
+        Product(item.id, item.title, item.category, item.description, item.price, item.rating,
+            item.featured, item.imagePath?.takeIf { it.startsWith("/img/") }?.let { catalogueOrigin + it })
     }
 
     override suspend fun enquire(product: Product, name: String, email: String) =
@@ -69,7 +67,7 @@ internal class RemoteCatalogue(private val store: StoreApi, private val enquirie
 
 internal fun createCatalogue(client: OkHttpClient = OkHttpClient()): Catalogue {
     val retrofit = Retrofit.Builder()
-        .baseUrl("https://fakestoreapi.com/")
+        .baseUrl("$catalogueOrigin/")
         .client(client)
         .addConverterFactory(GsonConverterFactory.create())
         .build()

@@ -14,20 +14,20 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-class DirectStoreTest {
-    @Test fun browsingCallsFakeStoreAndMapsItsProductFormat() = runBlocking {
-        val photo = "https://fakestoreapi.com/img/bag.jpg"
+class CatalogueApiTest {
+    @Test fun browsingUsesBackendForProductsAndPhotos() = runBlocking {
+        val photo = "/img/bag.jpg"
         val body = """[{"id":1,"title":"Bag","category":"Travel","description":"Canvas","price":15,
-            "rating":{"rate":4.8,"count":6},"image":"$photo"}]"""
+            "rating":4.8,"featured":true,"imagePath":"$photo"}]"""
         val client = OkHttpClient.Builder().addInterceptor { chain ->
-            assertEquals("https://fakestoreapi.com/products", chain.request().url.toString())
+            assertEquals("http://127.0.0.1:3000/products", chain.request().url.toString())
             Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200)
                 .message("OK").body(body.toResponseBody("application/json".toMediaType())).build()
         }.build()
 
         val product = createCatalogue(client).products().single()
         assertEquals(4.8, product.rating, 0.0)
-        assertEquals(photo, product.imageUrl)
+        assertEquals("http://127.0.0.1:3000$photo", product.imageUrl)
         assertEquals(true, product.featured)
     }
 
