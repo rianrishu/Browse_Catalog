@@ -37,6 +37,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.picasso)
     implementation(libs.retrofit)
     implementation(libs.gson.converter)
     implementation(libs.okhttp)

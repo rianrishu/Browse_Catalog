@@ -7,10 +7,12 @@ export async function products() {
   const response = await fetch('https://fakestoreapi.com/products', { signal: AbortSignal.timeout(8000) });
   if (!response.ok) throw new Error('Product source unavailable');
   const rows = await response.json();
-  return rows.map(({ id, title, description, category, price, rating }) => {
+  return rows.map(({ id, title, description, category, price, rating, image }) => {
     if (!Number.isInteger(id) || ![title, description, category].every(v => typeof v === 'string') ||
         !Number.isFinite(price) || !Number.isFinite(rating?.rate)) throw new Error('Invalid product');
-    return { id, title, description, category, price, rating: rating.rate, featured: featuredIds.includes(id) };
+    const imagePath = typeof image === 'string' && image.startsWith('https://fakestoreapi.com/img/')
+      ? new URL(image).pathname : null;
+    return { id, title, description, category, price, imagePath, rating: rating.rate, featured: featuredIds.includes(id) };
   });
 }
 
@@ -37,6 +39,15 @@ export function catalogueHandler(load = products, send = deliver) {
       res.end(JSON.stringify(value));
     }
     try {
+      if (req.method === 'GET' && /^\/img\/[a-zA-Z0-9_.%-]+\.(?:jpg|jpeg|png|webp)$/i.test(req.url)) {
+        const photo = await fetch('https://fakestoreapi.com' + req.url, {
+          signal: AbortSignal.timeout(8000), redirect: 'error'
+        });
+        if (!photo.ok) return reply(404, {});
+        const bytes = Buffer.from(await photo.arrayBuffer());
+        res.writeHead(200, { 'Content-Type': photo.headers.get('content-type'), 'Cache-Control': 'max-age=86400' });
+        return res.end(bytes);
+      }
       if (req.method === 'GET' && req.url === '/products') return reply(200, await load());
       if (req.method !== 'POST' || req.url !== '/enquiries') return reply(404, { error: 'Unknown route' });
       if (req.headers['content-type']?.split(';')[0] !== 'application/json') return reply(415, {});
@@ -67,5 +78,5 @@ export function catalogueHandler(load = products, send = deliver) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  createServer(catalogueHandler()).listen(Number(process.env.PORT || 3000), '0.0.0.0');
+  createServer(catalogueHandler()).listen(Number(process.env.PORT || 3000), '127.0.0.1');
 }

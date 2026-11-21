@@ -4,10 +4,15 @@ A Kotlin Android catalogue for browsing products and contacting sales. The Node.
 
 ## Run locally
 
-Install Android Studio with SDK 37, start an API 26+ emulator, and have Docker Compose and Android platform-tools available. From the repository root:
+Install Android Studio with SDK 37, start an API 26+ emulator, and install Android platform-tools, Node 22.9+ and [Mailpit](https://mailpit.axllent.org/docs/install/). Start the inbox with `mailpit` in one terminal, then run the backend from the repository root in another:
 
 ```sh
-docker compose up -d
+node --env-file-if-exists=.env backend/server.mjs
+```
+
+With the emulator running:
+
+```sh
 adb reverse tcp:3000 tcp:3000
 ./gradlew :app:installDebug
 adb shell am start -n com.rishu.browsecatalog/.MainActivity
@@ -15,11 +20,15 @@ adb shell am start -n com.rishu.browsecatalog/.MainActivity
 
 Gradle uses the project's JDK 25 toolchain. Allow extra time for the first SDK, toolchain and image downloads. The backend needs internet access to Fake Store. To diagnose a loading error, open `http://localhost:3000/products` on the host and check `adb reverse --list`.
 
-Choose a featured product, open **Enquire**, enter a name and email, and send it. Open the [local sales inbox](http://localhost:8025) and check the product and reply address. To change the recipient, copy `.env.example` to `.env`, edit `SALES_EMAIL`, and rerun Compose. Stop the containers with `docker compose down`.
+Choose a featured product, open **Enquire**, enter a name and email, and send it. Open the [local sales inbox](http://localhost:8025) and check the product and reply address. To change the recipient, copy `.env.example` to `.env`, edit `SALES_EMAIL`, and restart Node. Stop the backend and inbox with Ctrl+C in their terminals.
+
+## Screen previews
+
+With the debug variant selected in Android Studio, open `CataloguePreviews.kt` and select **Design** or **Split** to inspect the five screens with sample data. The running app loads product photos through the backend.
 
 ## Tests
 
-Run `node --test backend/server.test.mjs` with Node 22+ for catalogue mapping, validation and delivery. Run `./gradlew :app:testDebugUnitTest` for product search and category ordering.
+Run `node --test backend/server.test.mjs` with Node 22.9+ for catalogue mapping, validation and delivery. Run `./gradlew :app:testDebugUnitTest` for product search and category ordering.
 
 ## Decisions
 

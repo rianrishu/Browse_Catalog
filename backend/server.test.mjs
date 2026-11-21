@@ -44,3 +44,18 @@ test('an inbox failure cannot produce a thank you', async () => {
   await handle(req, res);
   assert.equal(res.status, 502);
 });
+
+test('product photos come through the catalogue backend', async t => {
+  t.mock.method(globalThis, 'fetch', async url => {
+    assert.equal(url, 'https://fakestoreapi.com/img/bag.jpg');
+    return new Response('photo', { headers: { 'Content-Type': 'image/jpeg' } });
+  });
+  const res = {
+    writeHead(status, headers) { this.status = status; this.headers = headers; },
+    end(bytes) { this.bytes = bytes; }
+  };
+  await catalogueHandler()({ method: 'GET', url: '/img/bag.jpg' }, res);
+  assert.equal(res.status, 200);
+  assert.equal(res.headers['Content-Type'], 'image/jpeg');
+  assert.equal(res.bytes.toString(), 'photo');
+});

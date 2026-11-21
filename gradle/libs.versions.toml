@@ -10,6 +10,7 @@ kotlin = "2.2.10"
 composeBom = "2026.02.01"
 
 [libraries]
+picasso = { module = "com.squareup.picasso:picasso", version = "2.71828" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version = "3.0.0" }
 gson-converter = { module = "com.squareup.retrofit2:converter-gson", version = "3.0.0" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version = "4.12.0" }
