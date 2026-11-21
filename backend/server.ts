@@ -15,4 +15,6 @@ createServer(async (request, response) => {
   } catch {
     response.destroy();
   }
-}).listen(3000, '127.0.0.1');
+}).listen(3000, '127.0.0.1', () => {
+  console.log('Catalogue backend listening at http://127.0.0.1:3000');
+});
