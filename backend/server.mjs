@@ -30,8 +30,8 @@ async function deliver({ product, name, email }) {
   if (!response.ok) throw new Error('Inbox unavailable');
 }
 
-export function catalogueServer(load = products, send = deliver) {
-  return createServer(async (req, res) => {
+export function catalogueHandler(load = products, send = deliver) {
+  return async (req, res) => {
     function reply(status, value) {
       res.writeHead(status, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(value));
@@ -63,9 +63,9 @@ export function catalogueServer(load = products, send = deliver) {
     } catch {
       reply(502, { error: 'Service unavailable' });
     }
-  });
+  };
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  catalogueServer().listen(Number(process.env.PORT || 3000), '0.0.0.0');
+  createServer(catalogueHandler()).listen(Number(process.env.PORT || 3000), '0.0.0.0');
 }

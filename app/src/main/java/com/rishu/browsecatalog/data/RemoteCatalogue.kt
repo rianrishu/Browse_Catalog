@@ -30,7 +30,7 @@ internal class RemoteCatalogue(private val api: CatalogueApi) : Catalogue {
 
 internal fun createCatalogue(): Catalogue {
     val retrofit = Retrofit.Builder()
-        .baseUrl("http://10.0.2.2:3000/")
+        .baseUrl("http://127.0.0.1:3000/")
         .client(OkHttpClient())
         .addConverterFactory(GsonConverterFactory.create())
         .build()
